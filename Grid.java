@@ -1,10 +1,12 @@
 import java.util.Random;
+
 class Grid
 {
-    // Proprietes
+    // PROPRIETES
     private Cell[][] array;
+    public boolean game;
 
-    // Constructeurs
+    // CONSTRUCTEURS
     public Grid(int longueur, int largeur, int nbBombs) {
         this.array = new Cell[longueur][largeur];
         this.init(largeur, longueur, nbBombs);
@@ -25,6 +27,7 @@ class Grid
     
     }
 
+    //METHODES
     public void init(int numRows, int numCols, int numBombs) {
         // Initialiser la grille avec toutes les cases vides
         this.array = new Cell[numRows][numCols];
@@ -96,60 +99,82 @@ class Grid
     public void gameOver(){
         for (int i = 0; i < getArray().length; i++) {
             for (int j = 0; j < array[i].length; j++) {
-                Cell cellule = array[i][j];
-                if (!cellule.isRevealed()) {
-                    revealCell(i, j);
+                if (!array[i][j].isRevealed()) {
+                    array[i][j].setRevealed(true);
                 }
             }
         }
+        Demineur.gameOver = true;
         System.out.println("Game Over");
+        printGrid();
+
     }
 
-    public void checkWin(){
+    public boolean checkWin() {
         for (int i = 0; i < getArray().length; i++) {
             for (int j = 0; j < array[i].length; j++) {
-                Cell cellule = array[i][j];
-                if (!cellule.isRevealed()) {
+                Cell currentCase = array[i][j];
+                if (!currentCase.isBomb() && !currentCase.isRevealed()) {
+                    return false; // une case non-mine n'est pas révélée
+                } else if (currentCase.isBomb() && !currentCase.isFlagged()) {
+                    return false; // une mine n'est pas marquée
                 }
             }
         }
+        return true; // toutes les cases non-mines sont révélées et toutes les mines sont marquées
     }
+    
 
     private void revealCell(int x, int y) {
+        // Vérifier que les coordonnées sont valides
+        if (x < 0 || x >= this.array.length || y < 0 || y >= this.array[x].length) {
+            return;
+        }
+        
         Cell cellule = this.array[x][y];
-
+    
         // Si la case est déjà révélée ou marquée d'un drapeau, ne rien faire
         if (cellule.isRevealed() || cellule.isFlagged()) {
             return;
         }
-
+    
         // Révéler la case actuelle
         cellule.setRevealed(true);
-
-        // Si la case actuelle n'a pas de bombe et n'a pas de voisins avec des bombes, révéler les cases adjacentes
-        if (!cellule.isBomb()) {
+    
+        // Si la case actuelle contient une bombe, ne pas révéler récursivement ses cases adjacentes
+        if (cellule.isBomb()) {
+            return;
+        }
+    
+        // Si la case actuelle n'a pas de voisins avec des bombes, révéler les cases adjacentes
+        if (cellule.getNumber() == 0) {
             // Parcourir les cases adjacentes
             for (int i = x - 1; i <= x + 1; i++) {
                 for (int j = y - 1; j <= y + 1; j++) {
                     // Vérifier que les coordonnées sont valides et ne pas révéler la case actuelle à nouveau
-                    if (i >= 0 && i < this.array.length && j >= 0 && j < this.array[i].length && !(i == x && j == y)) {
+                    if (i != x || j != y) {
                         revealCell(i, j); // Appeler la méthode récursivement pour révéler les cases adjacentes
                     }
                 }
             }
         }
     }
+    
 
     public void play(int x, int y, String action) {
         Cell cellule = this.array[x][y];
 
         if (action.equals("reveal")) {
-            if (cellule.isBomb()) {
-                //gameOver();
+             if (cellule.isBomb()) {
+                gameOver();
             } else {
                 revealCell(x, y);
-                //checkWin();
-            }
+                if (checkWin()){
+                    System.out.print("You won!");
+                    gameOver();
+                }
+            } 
+            revealCell(x, y);
         } else if (action.equals("flag")) {
             cellule.setFlagged(true);
         } else if (action.equals("unflag")) {

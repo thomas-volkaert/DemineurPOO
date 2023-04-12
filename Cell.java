@@ -1,10 +1,12 @@
 public class Cell {
 
+    //PROPRIETES
     private boolean revealed;
     private boolean bomb;
     private int number;
     private boolean flagged;
     
+    //CONSTRUCTEUR
     public Cell() {
         this.revealed = false;
         this.bomb = false;
@@ -12,6 +14,7 @@ public class Cell {
         this.flagged = false;
     }
 
+    //GET SET
     public boolean isRevealed() {
         return revealed;
     }
